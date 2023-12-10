@@ -1,0 +1,343 @@
+﻿@page "/dashboard"
+
+@attribute [Authorize]
+
+@using FinMarketApp.Shared
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+
+
+
+<PageTitle>Fin Market (Dashboard)</PageTitle>
+
+<link href="css/dashboard.css" rel="stylesheet" />
+
+<NavMenu/>
+
+@* ========== THIS FILE IS A LIST OF BUDGETS CREATED BY THE USER ========== *@
+
+<main>
+    <div class="container">
+        <div class="d-flex flex-row justify-content-between">
+            <div class="title">My Budgets</div>
+            <button class="btn btn-primary btn-budget"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createBudgetModal">
+                Create Budget
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade"
+                 id="createBudgetModal"
+                 tabindex="-1"
+                 aria-labelledby="createBudgetModal"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <form @onsubmit="CreateBudgetGoal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="exampleModalLabel">
+                                    Set a Budget
+                                </h1>
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <div class="row">
+                                        <div class="col">
+                                            <label class="form-label">Name</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   name="name"
+                                                   @bind="newBudgetGoal.Name"
+                                                   required />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="row">
+                                        <div class="col">
+                                            <label class="form-label">Target</label>
+                                            <input type="number"
+                                                   class="form-control"
+                                                   name="target"
+                                                   @bind="newBudgetGoal.Target"
+                                                   required />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button"
+                                        class="btn btn-outline-dark"
+                                        data-bs-dismiss="modal">
+                                    Close
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-budget">
+                                    Save changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Target</th>
+                 @*        <th scope="col">Balance</th>
+                        <th scope="col">Status</th> *@
+                        <th scope="col">Date</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (budgetGoals != null && budgetGoals.Any())
+                    {
+                        @foreach (var goal in budgetGoals)
+                        {
+                            <tr class="row-hover">
+                                <th scope="row">@goal.BudgetGoalId</th>
+                                <td>@goal.Name</td>
+                                <td>@string.Format("${0:N2}", goal.Target)</td>
+                          @*       <td>Balance</td>
+                                <td>Status</td> *@
+                                <td>
+                                    @goal.Date
+                                </td>
+                                <td>
+                                    <button class="btn btn-light btn-action" type="button" data-bs-toggle="modal" data-bs-target="#updateBudgetModal-@goal.BudgetGoalId">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </button>
+                                
+
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="updateBudgetModal-@goal.BudgetGoalId" tabindex="-1" aria-labelledby="updateBudgetModal-@goal.BudgetGoalId" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">Edit: @goal.Name</h1>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <label class="form-label">Name</label>
+                                                                <input type="text" class="form-control" @bind="editedBudgetGoal.Name" required />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <label class="form-label">Target</label>
+                                                                <input type="number" class="form-control" @bind="editedBudgetGoal.Target" required />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="button" class="btn btn-primary" @onclick="() => UpdateGoal(goal.BudgetGoalId)">Save changes</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button class="btn btn-light btn-action" @onclick="() => DeleteGoal(goal.BudgetGoalId)">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+
+                                    @* View *@
+                                    <button class="btn btn-light btn-action"  @onclick="() => NavigateToGoalDetails(goal.BudgetGoalId)">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7">No budget goals found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+@code {
+    List<BudgetGoal> budgetGoals;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    // this is sample code on how to get data from the server based on authenticated user
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+        if (user != null && user.IsAuthenticated)
+        {
+            try
+            {
+                budgetGoals = await Http.GetFromJsonAsync<List<BudgetGoal>>("api/budgetgoal"); // the name is from controller: BudgetGoalController without the word controller
+            }
+            catch(Exception ex){
+                Console.WriteLine($"ERROR: {ex.Message}");
+            }
+        }
+
+    }
+
+    private void NavigateToGoalDetails(int goalId)
+    {
+        NavigationManager.NavigateTo($"/budget-goal/{goalId}");
+    }
+
+    // ========= CREATE BUDGET GOAL =========
+    private BudgetGoal newBudgetGoal = new BudgetGoal();
+
+    private async Task CreateBudgetGoal()
+    {
+        Console.WriteLine("================== Create Budget CLICKED! ==================");
+
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+        if (user != null && user.IsAuthenticated)
+        {
+            try
+            {
+                Console.WriteLine(newBudgetGoal.Target);
+                var response = await Http.PostAsJsonAsync("api/budgetgoal/", newBudgetGoal);
+
+                Console.WriteLine($"SAVING USER ID: {newBudgetGoal.ApplicationUserId}");
+
+                Console.WriteLine(response.IsSuccessStatusCode);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Successfully created the budget goal
+                    newBudgetGoal = new BudgetGoal(); // Reset the form
+                                                      // You may also want to refresh the list of budget goals
+
+                    // Refresh Page
+                    NavigationManager.NavigateTo("/dashboard", true);
+                    Console.WriteLine("Budget goal created successfully!");
+                }
+                else
+                {
+                    // Handle error response from the server
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task DeleteGoal(int goalId)
+    {
+        var confirmDelete = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this budget goal?");
+
+        if (confirmDelete)
+        {
+            try
+            {
+                var response = await Http.DeleteAsync($"api/budgetgoal/{goalId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Successfully deleted the budget goal
+                    // You may also want to refresh the list of budget goals
+
+                    // Refresh Page
+                    NavigationManager.NavigateTo("/dashboard", true);
+                    Console.WriteLine("Budget goal deleted successfully!");
+
+
+                }
+                else
+                {
+                    // Handle error response from the server
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+
+
+    private BudgetGoal editedBudgetGoal = new BudgetGoal();
+
+    private async Task UpdateGoal(int goalId)
+    {
+        Console.WriteLine("================== Update Budget CLICKED! ==================");
+        Console.WriteLine(editedBudgetGoal.Name);
+        Console.WriteLine(editedBudgetGoal.Target);
+        Console.WriteLine(goalId);
+
+        // check if budget target is greater than 0
+        if (editedBudgetGoal.Target <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Budget target must be greater than 0.");
+            return;
+        }
+
+    var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.Identity;
+
+    if (user != null && user.IsAuthenticated)
+        {
+            try
+            {
+                var response = await Http.PutAsJsonAsync($"api/budgetgoal/{goalId}", editedBudgetGoal);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    
+                    // Refresh Page
+                    NavigationManager.NavigateTo("/dashboard", true);
+                    Console.WriteLine("Budget goal updated successfully!");
+                }
+                else
+                {
+                    // Handle error response from the server
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+
+    }
+
+   
+}
