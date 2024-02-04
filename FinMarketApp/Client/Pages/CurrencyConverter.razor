@@ -1,0 +1,273 @@
+﻿@page "/currencyconverter"
+<PageTitle>Fin Market (Currency Converter)</PageTitle>
+
+@using System.Net.Http
+@using System.Net.Http.Json
+@using Newtonsoft.Json
+@inject HttpClient Http
+
+<link href="css/currencyConverter.css" rel="stylesheet" />
+
+
+<NavMenu />
+<main>
+ <div class="container">
+
+        <h2><strong>Real-Time Currency Converter &#128177</strong></h2>
+
+
+@if (CurrencyList == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="text-box">
+    <div>
+        <label for="amountFrom">Amount:</label>
+        <input type="number" id="amountFrom" @bind="amountFrom" />
+
+        <label for="convertFrom">Convert from:</label>
+        <select id="convertFrom" @bind="convertFrom">
+            @foreach (var currency in CurrencyList)
+            {
+                <option value="@currency.Code">@currency.Name</option>
+            }
+        </select>
+
+        <label for="convertTo">Convert to:</label>
+        <select id="convertTo" @bind="convertTo">
+            @foreach (var currency in CurrencyList)
+            {
+                <option value="@currency.Code">@currency.Name</option>
+            }
+        </select>
+
+                    <button @onclick="ConvertCurrency">Convert </button>
+    </div>
+
+    @if (conversionResult.HasValue)
+    {
+        <p>Converted Amount : @conversionResult.Value</p>
+        <p1>Exchange Rate: @exchangeRate</p1>
+    }
+    </div>
+    }
+ </div>
+</main> 
+
+
+@code {
+    private List<Currency> CurrencyList { get; set; }
+    private float amountFrom;
+    private string convertFrom = "SGD"; // default value
+    private string convertTo = "USD"; // default value
+    private float? conversionResult;
+    private float exchangeRate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load your currency list here
+        CurrencyList = new List<Currency>
+        {
+            new Currency { Name = "Afghan Afghani", Code = "AFA" },
+            new Currency { Name = "Albanian Lek", Code = "ALL" },
+            new Currency { Name = "Algerian Dinar", Code = "DZD" },
+            new Currency { Name = "Angolan Kwanza", Code = "AOA" },
+            new Currency { Name = "Argentine Peso", Code = "ARS" },
+            new Currency { Name = "Armenian Dram", Code = "AMD" },
+            new Currency { Name = "Aruban Florin", Code = "AWG" },
+            new Currency { Name = "Australian Dollar", Code = "AUD" },
+            new Currency { Name = "Azerbaijani Manat", Code = "AZN" },
+            new Currency { Name = "Bahamian Dollar", Code = "BSD" },
+            new Currency { Name = "Bahraini Dinar", Code = "BHD" },
+            new Currency { Name = "Bangladeshi Taka", Code = "BDT" },
+            new Currency { Name = "Barbadian Dollar", Code = "BBD" },
+            new Currency { Name = "Belarusian Ruble", Code = "BYR" },
+            new Currency { Name = "Belgian Franc", Code = "BEF" },
+            new Currency { Name = "Belize Dollar", Code = "BZD" },
+            new Currency { Name = "Bermudan Dollar", Code = "BMD" },
+            new Currency { Name = "Bhutanese Ngultrum", Code = "BTN" },
+            new Currency { Name = "Bitcoin", Code = "BTC" },
+            new Currency { Name = "Bolivian Boliviano", Code = "BOB" },
+            new Currency { Name = "Bosnia-Herzegovina Convertible Mark", Code = "BAM" },
+            new Currency { Name = "Botswanan Pula", Code = "BWP" },
+            new Currency { Name = "Brazilian Real", Code = "BRL" },
+            new Currency { Name = "British Pound Sterling", Code = "GBP" },
+            new Currency { Name = "Brunei Dollar", Code = "BND" },
+            new Currency { Name = "Bulgarian Lev", Code = "BGN" },
+            new Currency { Name = "Burundian Franc", Code = "BIF" },
+            new Currency { Name = "Cambodian Riel", Code = "KHR" },
+            new Currency { Name = "Canadian Dollar", Code = "CAD" },
+            new Currency { Name = "Cape Verdean Escudo", Code = "CVE" },
+            new Currency { Name = "Cayman Islands Dollar", Code = "KYD" },
+            new Currency { Name = "CFA Franc BCEAO", Code = "XOF" },
+            new Currency { Name = "CFA Franc BEAC", Code = "XAF" },
+            new Currency { Name = "CFP Franc", Code = "XPF" },
+            new Currency { Name = "Chilean Peso", Code = "CLP" },
+            new Currency { Name = "Chilean Unit of Account", Code = "CLF" },
+            new Currency { Name = "Chinese Yuan", Code = "CNY" },
+            new Currency { Name = "Colombian Peso", Code = "COP" },
+            new Currency { Name = "Comorian Franc", Code = "KMF" },
+            new Currency { Name = "Congolese Franc", Code = "CDF" },
+            new Currency { Name = "Costa Rican Colón", Code = "CRC" },
+            new Currency { Name = "Croatian Kuna", Code = "HRK" },
+            new Currency { Name = "Cuban Convertible Peso", Code = "CUC" },
+            new Currency { Name = "Czech Republic Koruna", Code = "CZK" },
+            new Currency { Name = "Danish Krone", Code = "DKK" },
+            new Currency { Name = "Djiboutian Franc", Code = "DJF" },
+            new Currency { Name = "Dominican Peso", Code = "DOP" },
+            new Currency { Name = "East Caribbean Dollar", Code = "XCD" },
+            new Currency { Name = "Egyptian Pound", Code = "EGP" },
+            new Currency { Name = "Eritrean Nakfa", Code = "ERN" },
+            new Currency { Name = "Estonian Kroon", Code = "EEK" },
+            new Currency { Name = "Ethiopian Birr", Code = "ETB" },
+            new Currency { Name = "Euro", Code = "EUR" },
+            new Currency { Name = "Falkland Islands Pound", Code = "FKP" },
+            new Currency { Name = "Fijian Dollar", Code = "FJD" },
+            new Currency { Name = "Gambian Dalasi", Code = "GMD" },
+            new Currency { Name = "Georgian Lari", Code = "GEL" },
+            new Currency { Name = "German Mark", Code = "DEM" },
+            new Currency { Name = "Ghanaian Cedi", Code = "GHS" },
+            new Currency { Name = "Gibraltar Pound", Code = "GIP" },
+            new Currency { Name = "Greek Drachma", Code = "GRD" },
+            new Currency { Name = "Guatemalan Quetzal", Code = "GTQ" },
+            new Currency { Name = "Guinean Franc", Code = "GNF" },
+            new Currency { Name = "Guyanaese Dollar", Code = "GYD" },
+            new Currency { Name = "Haitian Gourde", Code = "HTG" },
+            new Currency { Name = "Honduran Lempira", Code = "HNL" },
+            new Currency { Name = "Hong Kong Dollar", Code = "HKD" },
+            new Currency { Name = "Hungarian Forint", Code = "HUF" },
+            new Currency { Name = "Icelandic Króna", Code = "ISK" },
+            new Currency { Name = "Indian Rupee", Code = "INR" },
+            new Currency { Name = "Indonesian Rupiah", Code = "IDR" },
+            new Currency { Name = "Iranian Rial", Code = "IRR" },
+            new Currency { Name = "Iraqi Dinar", Code = "IQD" },
+            new Currency { Name = "Israeli New Sheqel", Code = "ILS" },
+            new Currency { Name = "Italian Lira", Code = "ITL" },
+            new Currency { Name = "Jamaican Dollar", Code = "JMD" },
+            new Currency { Name = "Japanese Yen", Code = "JPY" },
+            new Currency { Name = "Jordanian Dinar", Code = "JOD" },
+            new Currency { Name = "Kazakhstani Tenge", Code = "KZT" },
+            new Currency { Name = "Kenyan Shilling", Code = "KES" },
+            new Currency { Name = "Kuwaiti Dinar", Code = "KWD" },
+            new Currency { Name = "Kyrgystani Som", Code = "KGS" },
+            new Currency { Name = "Laotian Kip", Code = "LAK" },
+            new Currency { Name = "Latvian Lats", Code = "LVL" },
+            new Currency { Name = "Lebanese Pound", Code = "LBP" },
+            new Currency { Name = "Lesotho Loti", Code = "LSL" },
+            new Currency { Name = "Liberian Dollar", Code = "LRD" },
+            new Currency { Name = "Libyan Dinar", Code = "LYD" },
+            new Currency { Name = "Litecoin", Code = "LTC" },
+            new Currency { Name = "Lithuanian Litas", Code = "LTL" },
+            new Currency { Name = "Macanese Pataca", Code = "MOP" },
+            new Currency { Name = "Macedonian Denar", Code = "MKD" },
+            new Currency { Name = "Malagasy Ariary", Code = "MGA" },
+            new Currency { Name = "Malawian Kwacha", Code = "MWK" },
+            new Currency { Name = "Malaysian Ringgit", Code = "MYR" },
+            new Currency { Name = "Maldivian Rufiyaa", Code = "MVR" },
+            new Currency { Name = "Mauritanian Ouguiya", Code = "MRO" },
+            new Currency { Name = "Mauritian Rupee", Code = "MUR" },
+            new Currency { Name = "Mexican Peso", Code = "MXN" },
+            new Currency { Name = "Moldovan Leu", Code = "MDL" },
+            new Currency { Name = "Mongolian Tugrik", Code = "MNT" },
+            new Currency { Name = "Moroccan Dirham", Code = "MAD" },
+            new Currency { Name = "Mozambican Metical", Code = "MZM" },
+            new Currency { Name = "Myanmar Kyat", Code = "MMK" },
+            new Currency { Name = "Namibian Dollar", Code = "NAD" },
+            new Currency { Name = "Nepalese Rupee", Code = "NPR" },
+            new Currency { Name = "Netherlands Antillean Guilder", Code = "ANG" },
+            new Currency { Name = "New Taiwan Dollar", Code = "TWD" },
+            new Currency { Name = "New Zealand Dollar", Code = "NZD" },
+            new Currency { Name = "Nicaraguan Córdoba", Code = "NIO" },
+            new Currency { Name = "Nigerian Naira", Code = "NGN" },
+            new Currency { Name = "North Korean Won", Code = "KPW" },
+            new Currency { Name = "Norwegian Krone", Code = "NOK" },
+            new Currency { Name = "Omani Rial", Code = "OMR" },
+            new Currency { Name = "Pakistani Rupee", Code = "PKR" },
+            new Currency { Name = "Panamanian Balboa", Code = "PAB" },
+            new Currency { Name = "Papua New Guinean Kina", Code = "PGK" },
+            new Currency { Name = "Paraguayan Guarani", Code = "PYG" },
+            new Currency { Name = "Peruvian Nuevo Sol", Code = "PEN" },
+            new Currency { Name = "Philippine Peso", Code = "PHP" },
+            new Currency { Name = "Polish Zloty", Code = "PLN" },
+            new Currency { Name = "Qatari Rial", Code = "QAR" },
+            new Currency { Name = "Romanian Leu", Code = "RON" },
+            new Currency { Name = "Russian Ruble", Code = "RUB" },
+            new Currency { Name = "Rwandan Franc", Code = "RWF" },
+            new Currency { Name = "Salvadoran Colón", Code = "SVC" },
+            new Currency { Name = "Samoan Tala", Code = "WST" },
+            new Currency { Name = "São Tomé and Príncipe Dobra", Code = "STD" },
+            new Currency { Name = "Saudi Riyal", Code = "SAR" },
+            new Currency { Name = "Serbian Dinar", Code = "RSD" },
+            new Currency { Name = "Seychellois Rupee", Code = "SCR" },
+            new Currency { Name = "Sierra Leonean Leone", Code = "SLL" },
+            new Currency { Name = "Singapore Dollar", Code = "SGD" },
+            new Currency { Name = "Slovak Koruna", Code = "SKK" },
+            new Currency { Name = "Solomon Islands Dollar", Code = "SBD" },
+            new Currency { Name = "Somali Shilling", Code = "SOS" },
+            new Currency { Name = "South African Rand", Code = "ZAR" },
+            new Currency { Name = "South Korean Won", Code = "KRW" },
+            new Currency { Name = "South Sudanese Pound", Code = "SSP" },
+            new Currency { Name = "Special Drawing Rights", Code = "XDR" },
+            new Currency { Name = "Sri Lankan Rupee", Code = "LKR" },
+            new Currency { Name = "St. Helena Pound", Code = "SHP" },
+            new Currency { Name = "Sudanese Pound", Code = "SDG" },
+            new Currency { Name = "Surinamese Dollar", Code = "SRD" },
+            new Currency { Name = "Swazi Lilangeni", Code = "SZL" },
+            new Currency { Name = "Swedish Krona", Code = "SEK" },
+            new Currency { Name = "Swiss Franc", Code = "CHF" },
+            new Currency { Name = "Syrian Pound", Code = "SYP" },
+            new Currency { Name = "Tajikistani Somoni", Code = "TJS" },
+            new Currency { Name = "Tanzanian Shilling", Code = "TZS" },
+            new Currency { Name = "Thai Baht", Code = "THB" },
+            new Currency { Name = "Tongan Pa'anga", Code = "TOP" },
+            new Currency { Name = "Trinidad & Tobago Dollar", Code = "TTD" },
+            new Currency { Name = "Tunisian Dinar", Code = "TND" },
+            new Currency { Name = "Turkish Lira", Code = "TRY" },
+            new Currency { Name = "Turkmenistani Manat", Code = "TMT" },
+            new Currency { Name = "Ugandan Shilling", Code = "UGX" },
+            new Currency { Name = "Ukrainian Hryvnia", Code = "UAH" },
+            new Currency { Name = "United Arab Emirates Dirham", Code = "AED" },
+            new Currency { Name = "Uruguayan Peso", Code = "UYU" },
+            new Currency { Name = "US Dollar", Code = "USD" },
+            new Currency { Name = "Uzbekistan Som", Code = "UZS" },
+            new Currency { Name = "Vanuatu Vatu", Code = "VUV" },
+            new Currency { Name = "Venezuelan Bolívar", Code = "VEF" },
+            new Currency { Name = "Vietnamese Dong", Code = "VND" },
+            new Currency { Name = "Yemeni Rial", Code = "YER" },
+            new Currency { Name = "Zambian Kwacha", Code = "ZMK" },
+            new Currency { Name = "Zimbabwean dollar", Code = "ZWL" }
+
+            
+        };
+    }
+
+    private async Task ConvertCurrency()
+    {
+        var apiKey = "69799d05ab0c71fcd792539c";
+        var apiUrl = $"https://v6.exchangerate-api.com/v6/{apiKey}/pair/{convertFrom}/{convertTo}/{amountFrom}";
+
+        var response = await Http.GetAsync(apiUrl);
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            var data = JsonConvert.DeserializeObject<dynamic>(content);
+
+            exchangeRate = data.conversion_rate;
+            conversionResult = amountFrom * exchangeRate;
+        }
+    }
+
+    public class Currency
+    {
+        public string Name { get; set; }
+        public string Code { get; set; }
+    }
+}
+   
+
+
+
+
+

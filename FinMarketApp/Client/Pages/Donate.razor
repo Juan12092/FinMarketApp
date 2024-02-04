@@ -1,0 +1,100 @@
+﻿@page "/donate"
+@using System.Globalization
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Fin Market (What Are Stocks)</PageTitle>
+
+<link href="css/Donate.css" rel="stylesheet" />
+
+<NavMenu />
+
+<main>
+    <div class="container py-5">
+        <h2 class="mb-4">OUR CAUSE</h2>
+        <div class="text-box">
+            <p>
+                FinMarket emerges as a pivotal platform for those determined to enhance their financial literacy and prowess. This website transcends the boundaries of a mere informational resource by incorporating essential, real-time financial tools, including live stock market updates and a comprehensive currency converter. 
+            </p>
+            <P>
+                These features are indispensable in an era where financial landscapes are continually shifting. The live stock market updates provided by FinMarket equips its users with up-to-the-minute insights on market trends and dynamics, enabling them to make prompt and well-informed financial decisions. 
+            </P>
+            <p>
+                Furthermore, the currency converter feature facilitates seamless global financial engagements, supporting users in navigating the complexities of international investments, travel, and commerce effortlessly. By melding these instrumental tools with a vast repository of financial tips and guidance.
+            </p>
+            <p>
+                FinMarket aims to offer a complete suite of resources that not only educates but empowers users to actively participate and prosper in the financial domain. This synergy of practical tools and educational content is at the heart of FinMarket's mission to cultivate financial literacy and independence, thereby promoting a financially savvy and thriving community in today's rapidly evolving economic environment.
+            </p>
+        </div>
+
+        <h3 class="support-header my-4">Please support our cause</h3>
+
+        <div class="row">
+            @foreach (var donation in donations)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@donation.Title</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">$@donation.Amount.ToString("N0", CultureInfo.InvariantCulture)</h6>
+                            <p class="card-text">@donation.Description</p>
+                            <button class="btn btn-primary" @onclick="() => SelectDonation(donation.Amount)">Donate</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (showModal)
+    {
+        <div class="modal" tabindex="-1" style="display:block" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" @onclick="() => showModal = false">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Thank you for donating @selectedDonationAmount.ToString("C", new CultureInfo("en-US"))</strong>  </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => showModal = false">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop" style="display:block"></div>
+    }
+
+</main>
+
+@code {
+    private List<DonationOption> donations = new List<DonationOption>
+    {
+        new DonationOption { Title = "Bronze Supporter", Amount = 10, Description = "Help us with a one-time donation." },
+        new DonationOption { Title = "Silver Supporter", Amount = 20, Description = "Support our cause more generously." },
+        new DonationOption { Title = "Gold Supporter", Amount = 50, Description = "Become a foundational supporter." },
+        new DonationOption { Title = "Platinum Supporter", Amount = 100, Description = "Help us make a significant impact." },
+        new DonationOption { Title = "Diamond Supporter", Amount = 500, Description = "Join our top-tier donor circle." },
+        new DonationOption { Title = "Ultimate Supporter", Amount = 1000, Description = "Join the pinnacle of our support network with a transformative donation."}
+
+    };
+
+    private bool showModal = false;
+    private decimal selectedDonationAmount = 0;
+    
+
+    private void SelectDonation(decimal amount)
+    {
+        selectedDonationAmount = amount;
+        showModal = true;
+    }
+
+    class DonationOption
+    {
+        public string Title { get; set; }
+        public decimal Amount { get; set; }
+        public string Description { get; set; }
+    }
+}

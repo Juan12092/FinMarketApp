@@ -1,0 +1,32 @@
+﻿@page "/stocks"
+@using FinMarketApp.Shared
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Fin Market (Stocks)</PageTitle>
+
+<link href="css/stocksUI.css" rel="stylesheet" />
+
+<NavMenu />
+
+<main>
+    <div class="title">
+        <strong>
+        Advanced Real-Time Chart
+        </strong>
+     </div>
+    <div>
+        <div class="tradingview-widget-container">
+            <div id="tradingview_advanced_chart"></div>
+        </div>
+    </div>
+</main>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("loadTradingView");
+        }
+    }
+}

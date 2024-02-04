@@ -1,0 +1,35 @@
+﻿main {
+    background-color: #23254d;
+    min-height: calc(100vh - 60px);
+}
+
+
+/* Style for the title */
+.title {
+    text-align: center; /* Center-align the title */
+    margin-bottom: 3px; /* Increase bottom margin to create a larger gap */
+    color: #04fbec;
+    padding-top: 2rem;
+    font-size: 2.0rem;
+    line-height: 2rem;
+    text-align: center;
+}
+
+.tradingview-widget-container {
+    border: 5px solid #4a8b7d;
+    margin: 50px auto; /* Increase top margin and center horizontally */
+    padding: 5px; /* Space inside the border */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: adds shadow for depth */
+    border-radius: 10px; /* Rounded corners for the container */
+    width: 1170px; 
+    display: block; 
+    background-color:#000000;
+}
+
+
+.container {
+    width: 95%;
+    padding: 10px;
+}
+
+
